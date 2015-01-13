@@ -5,18 +5,25 @@ module Env : sig
         cxnid: Server.conn;
         request: Cohttp.Request.t;
         body: Cohttp_lwt_body.t;
-        params: (string * string) list;
-        mutable resp_hdr: Cohttp.Header.t;
+        mutable params: (string * string) list;
     } with fields
 
-    val make : ?resp_hdr:Cohttp.Header.t -> Server.conn ->
-        Cohttp.Request.t -> Cohttp_lwt_body.t -> (string * string) list -> t
+    val make : ?params:(string * string) list -> Server.conn ->
+        Cohttp.Request.t -> Cohttp_lwt_body.t -> t
 
     val param : t -> string -> string
 
 end
 
 type resp = (Server.Response.t * Cohttp_lwt_body.t) Lwt.t
+
+module Middleware : sig
+    type t
+    val create : (Env.t -> t -> resp) -> t
+    val add : (Env.t -> t -> resp) -> t -> t
+    val call : Env.t -> t -> resp
+    val chain : t -> t -> t
+end
 
 val get : string -> (Env.t -> resp) -> unit
 val post: string -> (Env.t -> resp) -> unit
@@ -28,4 +35,4 @@ val put: string -> (Env.t -> resp) -> unit
 val options: string -> (Env.t -> resp) -> unit
 val other: string -> (Env.t -> resp) -> unit
 
-val run : unit -> unit
+val run : ?middleware:Middleware.t -> unit -> unit

@@ -6,12 +6,11 @@ module Env = struct
         cxnid: Cohttp_lwt_unix.Server.conn;
         request: Cohttp.Request.t;
         body: Cohttp_lwt_body.t;
-        params: (string * string) list;
-        mutable resp_hdr: Cohttp.Header.t;
+        mutable params: (string * string) list;
     } with fields
 
-    let make ?(resp_hdr = Cohttp.Header.init ()) cxnid request body params =
-        { cxnid; request; body; params; resp_hdr }
+    let make ?(params = []) cxnid request body =
+        { cxnid; request; body; params; }
 
     let param env name =
         let p = params env in
@@ -21,6 +20,19 @@ module Env = struct
 end
 
 type resp = (Server.Response.t * Cohttp_lwt_body.t) Lwt.t
+
+module Middleware = struct
+    type t = MW of (Env.t -> t -> resp) list
+    let return mw = MW mw
+    let empty = return []
+    let add handler (MW mw) = return (handler :: mw)
+    let create handler = add handler empty
+    let call env = function
+        | MW [] -> Server.respond_not_found ()
+        | MW (h::t) -> h env (return t)
+    let prepare (MW mw) = return (List.rev mw)
+    let chain (MW a) (MW b) = return (b @ a)
+end
 
 let routes = Array.init 7 (fun _ -> Route_tree.new_node "")
 
@@ -47,26 +59,37 @@ let put = register `PUT
 let options = register `OPTIONS
 let other = register (`Other "")
 
-let call meth conninfo req body =
+let dispatcher = Middleware.create begin fun env m ->
+    let req = Env.request env in
+    let meth = Cohttp.Request.meth req in
     let table = routes.(int_of_meth meth) in
     let uri = Cohttp.Request.uri req |> Uri.path in
     match Route_tree.search uri table with
     | Some (Route_tree.Result ((Some fn), params)) ->
         let f (a, b) = (a, Uri.pct_decode b) in
-        let params = List.map f params in
-        begin try Env.make conninfo req body params |> fn
-        with exn ->
-            let body = Printexc.to_string exn in
-            Server.respond_error ~body ()
-        end
+        List.map f params |> Env.set_params env;
+        fn env
     | _ -> Server.respond_not_found ()
+ end
 
-let make_server () =
-    let callback conninfo req fbody =
-        call (Cohttp.Request.meth req) conninfo req fbody in
+let exn_handler = Middleware.create begin fun env m ->
+    let res = try Middleware.call env m with exn ->
+        let body = Printexc.to_string exn in
+        Server.respond_error ~body () in
+    flush stdout;
+    res
+end
+
+let make_server middleware =
+    let middleware = Middleware.prepare middleware in
+    let callback conninfo req body =
+        let env = Env.make conninfo req body in
+        Middleware.call env middleware in
     let conn_closed (ch, conn) = () in
     let config = Server.make ~callback ~conn_closed () in
     Server.create config
 
-let run () =
-    make_server () |> Lwt_main.run
+let run ?(middleware = Middleware.empty) () =
+    let (@@) = Middleware.chain in
+    let middleware = exn_handler @@ middleware @@ dispatcher in
+    make_server middleware |> Lwt_main.run
