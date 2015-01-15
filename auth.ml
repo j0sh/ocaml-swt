@@ -62,6 +62,15 @@ let _ = post M.login_path begin fun env ->
         Server.respond_redirect (Uri.of_string path) ()
 end
 
+let _ = post "/logout" begin fun env ->
+    let cookie = Cohttp.Cookie.Set_cookie_hdr.make
+            ~expiration:(`Max_age 1L)
+            ~secure:M.secure ~http_only:true ("a", "unset") in
+    let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
+    let headers = Cohttp.Header.init_with k v in
+    Server.respond_redirect ~headers ~uri:(Uri.of_string "/login") ()
+end
+
 let auth = Middleware.create begin fun env m ->
     let req = Env.request env in
     let hdr = Cohttp.Request.headers req in
