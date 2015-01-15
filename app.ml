@@ -16,8 +16,27 @@ module A = struct
         username = "la llave" && pass = "open sesame"
 end
 
+let login_body path = "
+<html>
+  <body>
+    <div>
+        <p>Log In, Please</p>
+        <form method='post' action='"^path^"' />
+          <p>Username <input name='username' /></p>
+          <p>Password <input name='password' type='password' /></p>
+          <input type='submit' />
+      </form>
+    </div>
+  </body>
+</html>"
+
 let _ = get A.login_path begin fun env ->
-    let body = "Please Log In" in
+    let req = Env.request env in
+    let uri = Cohttp.Request.uri req in
+    let path = "/login" ^ match Uri.get_query_param uri "redir" with
+        | None -> ""
+        | Some r -> "?redir="^r in
+    let body = login_body path in
     Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body ()
 end
 
