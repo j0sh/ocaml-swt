@@ -1,0 +1,14 @@
+OASISFormat: 0.4
+Name:        swt
+Version:     0.01
+Synopsis:    Simple Web Toolkit for OCaml
+Authors:     Josh Allmann <joshua.allmann@gmail.com>
+License:     LGPL-3.0 with OCaml linking exception
+Plugins:     META (0.4)
+
+Library swt
+  Path:            .
+  BuildTools:      ocamlbuild
+  Modules:         Server, Auth
+  InternalModules: Route_tree
+  BuildDepends: str,cohttp,cohttp.lwt,lwt,lwt.syntax,uri,fieldslib,fieldslib.syntax,cryptokit

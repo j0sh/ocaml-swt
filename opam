@@ -1,0 +1,22 @@
+opam-version: "1.2"
+name: "swt"
+version: "0.1"
+maintainer: "Josh Allmann <joshua.allmann@gmail.com>"
+authors: "Josh Allmann <joshua.allmann@gmail.com>"
+dev-repo: "https://github.com/j0sh/ocaml-swt.git"
+homepage: "https://j0sh.github.io/swt"
+bug-reports: "https://github.com/j0sh/ocaml-swt/issues"
+license: "LGPL 3.0 with OCaml linking exception"
+build: [
+  [make]
+]
+install: [make "install"]
+remove: ["ocamlfind" "remove" "swt"]
+depends: [
+  "ocamlfind" {build}
+  "cohttp"
+  "lwt"
+  "uri"
+  "fieldslib"
+  "cryptokit"
+]
