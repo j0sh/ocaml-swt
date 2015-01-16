@@ -69,7 +69,13 @@ let dispatcher = Middleware.create begin fun env m ->
         let f (a, b) = (a, Uri.pct_decode b) in
         List.map f params |> Env.set_params env;
         fn env
-    | _ -> Server.respond_not_found ()
+    | _ -> begin try
+        (* todo: branch to middleware that properly handles files, dirs, &c *)
+        let uri = Cohttp.Request.uri req in
+        let fname = Server.resolve_local_file ~docroot:"" ~uri in
+        Server.respond_file ~fname ()
+        with _ -> Server.respond_not_found ()
+    end
  end
 
 let exn_handler = Middleware.create begin fun env m ->
