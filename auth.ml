@@ -1,4 +1,4 @@
-open Server
+open Swt
 
 module type Auth_int = sig
   val secret : string

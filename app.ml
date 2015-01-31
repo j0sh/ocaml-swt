@@ -1,4 +1,4 @@
-open Server
+open Swt
 
 let _ = get "/hello/:name" begin fun env ->
     let name = Env.param env "name" in

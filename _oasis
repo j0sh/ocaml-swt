@@ -9,6 +9,6 @@ Plugins:     META (0.4)
 Library swt
   Path:            .
   BuildTools:      ocamlbuild
-  Modules:         Server, Auth
+  Modules:         Swt, Auth
   InternalModules: Route_tree
   BuildDepends: str,cohttp,cohttp.lwt,lwt,lwt.syntax,uri,fieldslib,fieldslib.syntax,cryptokit

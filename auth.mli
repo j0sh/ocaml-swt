@@ -7,7 +7,7 @@ end
 
 module Make (M : Auth_int)  : sig
 
-    val auth : Server.Middleware.t
+    val auth : Swt.Middleware.t
 
 end
 
