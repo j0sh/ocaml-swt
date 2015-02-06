@@ -98,4 +98,4 @@ let make_server middleware =
 let run ?(middleware = Middleware.empty) () =
   let (@@) = Middleware.chain in
   let middleware = exn_handler @@ middleware @@ dispatcher in
-  make_server middleware |> Lwt_main.run
+  make_server middleware

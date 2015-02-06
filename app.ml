@@ -42,4 +42,4 @@ end
 
 module M = Auth.Make(A)
 
-let () = run ~middleware:M.auth ()
+let () = Lwt_main.run (run ~middleware:M.auth ())

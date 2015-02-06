@@ -35,4 +35,4 @@ val put: string -> (Env.t -> resp) -> unit
 val options: string -> (Env.t -> resp) -> unit
 val other: string -> (Env.t -> resp) -> unit
 
-val run : ?middleware:Middleware.t -> unit -> unit
+val run : ?middleware:Middleware.t -> unit -> unit Lwt.t
