@@ -86,16 +86,17 @@ let exn_handler = Middleware.create begin fun env m ->
     res
   end
 
-let make_server middleware =
+let make_server port middleware =
   let middleware = Middleware.prepare middleware in
   let callback conninfo req body =
     let env = Env.make conninfo req body in
     Middleware.call env middleware in
   let conn_closed (ch, conn) = () in
   let config = Server.make ~callback ~conn_closed () in
-  Server.create config
+  let mode = `TCP (`Port port) in
+  Server.create ~mode config
 
-let run ?(middleware = Middleware.empty) () =
+let run ?(port = 8080) ?(middleware = Middleware.empty) () =
   let (@@) = Middleware.chain in
   let middleware = exn_handler @@ middleware @@ dispatcher in
-  make_server middleware
+  make_server port middleware
