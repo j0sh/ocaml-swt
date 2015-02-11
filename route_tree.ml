@@ -54,7 +54,7 @@ let replace_branch branch tree =
 let rec build tree parts value =
   let Node (v, _, branches) = tree in
   match parts with
-    [] -> tree
+    [] -> set_value value tree
   | h :: [] ->
     let n = default (new_node h) (find_node h branches) in
     let q = set_value value n in
