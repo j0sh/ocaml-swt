@@ -72,7 +72,7 @@ let dispatcher = Middleware.create begin fun env m ->
     | _ -> begin try
           (* todo: branch to middleware that properly handles files, dirs, &c *)
           let uri = Cohttp.Request.uri req in
-          let fname = Server.resolve_local_file ~docroot:"" ~uri in
+          let fname = Server.resolve_local_file ~docroot:"static" ~uri in
           Server.respond_file ~fname ()
         with _ -> Server.respond_not_found ()
       end
