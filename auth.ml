@@ -73,8 +73,9 @@ let _ = post "/logout" begin fun env ->
 
 let auth = Middleware.create begin fun env m ->
     let req = Env.request env in
-    let hdr = Cohttp.Request.headers req in
+    let hdr = Cohttp.Header.remove req.Cohttp.Request.headers "swt-auth" in
     let cookies = Cohttp.Cookie.Cookie_hdr.extract hdr in
+    req.Cohttp.Request.headers <- hdr;
     try
       let token = search_kvs "a" cookies in
       let kvs = split_kvs token in
@@ -82,6 +83,7 @@ let auth = Middleware.create begin fun env m ->
       let sgn = search_kvs "s" kvs in
       let mac = gen_mac tok in
       if mac <> sgn then raise Auth_error else
+        req.Cohttp.Request.headers <- Cohttp.Header.add hdr "swt-auth" "ok";
         Middleware.call env m
     with Auth_error ->
       let uri = Cohttp.Request.uri req |> Uri.path in
