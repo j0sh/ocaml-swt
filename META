@@ -1,0 +1,13 @@
+# OASIS_START
+# DO NOT EDIT (digest: 94359a15be9b0b8f90b727d5187f2596)
+version = "0.01"
+description = "Simple Web Toolkit for OCaml"
+requires =
+"str cohttp cohttp.lwt lwt lwt.syntax uri fieldslib fieldslib.syntax cryptokit"
+archive(byte) = "swt.cma"
+archive(byte, plugin) = "swt.cma"
+archive(native) = "swt.cmxa"
+archive(native, plugin) = "swt.cmxs"
+exists_if = "swt.cma"
+# OASIS_STOP
+
