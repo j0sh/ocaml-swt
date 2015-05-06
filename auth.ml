@@ -75,7 +75,9 @@ let auth = Middleware.create begin fun env m ->
     let req = Env.request env in
     let hdr = Cohttp.Header.remove req.Cohttp.Request.headers "swt-auth" in
     let cookies = Cohttp.Cookie.Cookie_hdr.extract hdr in
-    req.Cohttp.Request.headers <- hdr;
+    let req_with_hdr h = Cohttp.Request.(make ~headers:h ~meth:req.meth
+      ~version:req.version ~encoding:req.encoding req.uri) in
+    env.Env.request <- req_with_hdr hdr;
     try
       let token = search_kvs "a" cookies in
       let kvs = split_kvs token in
@@ -83,7 +85,7 @@ let auth = Middleware.create begin fun env m ->
       let sgn = search_kvs "s" kvs in
       let mac = gen_mac tok in
       if mac <> sgn then raise Auth_error else
-        req.Cohttp.Request.headers <- Cohttp.Header.add hdr "swt-auth" "ok";
+        env.Env.request <- Cohttp.Header.add hdr "swt-auth" "ok" |> req_with_hdr;
         Middleware.call env m
     with Auth_error ->
       let uri = Cohttp.Request.uri req |> Uri.path in

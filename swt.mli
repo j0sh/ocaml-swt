@@ -3,7 +3,7 @@ module Server = Cohttp_lwt_unix.Server
 module Env : sig
     type t = {
         cxnid: Server.conn;
-        request: Cohttp.Request.t;
+        mutable request: Cohttp.Request.t;
         body: Cohttp_lwt_body.t;
         mutable params: (string * string) list;
     } with fields
