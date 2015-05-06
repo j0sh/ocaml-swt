@@ -34,7 +34,7 @@ module Middleware = struct
   let chain (MW a) (MW b) = return (b @ a)
 end
 
-let routes = Array.init 7 (fun _ -> Route_tree.new_node "")
+let routes = Array.init 10 (fun _ -> Route_tree.new_node "")
 
 let int_of_meth = function
   | `GET -> 0
@@ -44,7 +44,9 @@ let int_of_meth = function
   | `PATCH -> 4
   | `PUT -> 5
   | `OPTIONS -> 6
-  | `Other _ -> 7
+  | `CONNECT -> 7
+  | `TRACE -> 8
+  | `Other _ -> 9
 
 let register meth route handler =
   let m = int_of_meth meth in
@@ -57,6 +59,8 @@ let delete = register `DELETE
 let patch =  register `PATCH
 let put = register `PUT
 let options = register `OPTIONS
+let connect = register `CONNECT
+let trace = register `TRACE
 let other = register (`Other "")
 
 let dispatcher = Middleware.create begin fun env m ->
