@@ -72,10 +72,11 @@ let _ = post "/logout" begin fun env ->
   end
 
 let auth = Middleware.create begin fun env m ->
+    let open Cohttp in
     let req = Env.request env in
-    let hdr = Cohttp.Header.remove req.Cohttp.Request.headers "swt-auth" in
-    let cookies = Cohttp.Cookie.Cookie_hdr.extract hdr in
-    let req_with_hdr h = Cohttp.Request.(make ~headers:h ~meth:req.meth
+    let hdr = Header.remove req.Request.headers "swt-auth" in
+    let cookies = Cookie.Cookie_hdr.extract hdr in
+    let req_with_hdr h = Request.(make ~headers:h ~meth:req.meth
       ~version:req.version ~encoding:req.encoding req.uri) in
     env.Env.request <- req_with_hdr hdr;
     try
@@ -85,10 +86,10 @@ let auth = Middleware.create begin fun env m ->
       let sgn = search_kvs "s" kvs in
       let mac = gen_mac tok in
       if mac <> sgn then raise Auth_error else
-        env.Env.request <- Cohttp.Header.add hdr "swt-auth" "ok" |> req_with_hdr;
+        env.Env.request <- Header.add hdr "swt-auth" "ok" |> req_with_hdr;
         Middleware.call env m
     with Auth_error ->
-      let uri = Cohttp.Request.uri req |> Uri.path in
+      let uri = Request.uri req |> Uri.path in
       let redir = M.login_path in
       if uri = redir then Middleware.call env m else
         let redir = Printf.sprintf "%s?redir=%s" redir uri |> Uri.of_string in
