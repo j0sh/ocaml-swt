@@ -58,11 +58,11 @@ module Make (M : Auth_int)  = struct
       let cookie = Cohttp.Cookie.Set_cookie_hdr.make ~expiration:`Session ~secure:M.secure ~http_only:true ("a", v) in
       let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
       let headers = Cohttp.Header.init_with k v in
-      Server.respond_redirect ~headers ~uri:(Uri.of_string redir) ()
+      CoSrv.respond_redirect ~headers ~uri:(Uri.of_string redir) ()
     end
   with Auth_error ->
     let path = M.login_path ^ "?redir=" ^ redir in
-    Server.respond_redirect (Uri.of_string path) ()
+    CoSrv.respond_redirect (Uri.of_string path) ()
 end
 
 let _ = HTTP.post "/logout" begin fun env ->
@@ -71,7 +71,7 @@ let _ = HTTP.post "/logout" begin fun env ->
         ~secure:M.secure ~http_only:true ("a", "unset") in
     let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
     let headers = Cohttp.Header.init_with k v in
-    Server.respond_redirect ~headers ~uri:(Uri.of_string "/login") ()
+    CoSrv.respond_redirect ~headers ~uri:(Uri.of_string "/login") ()
   end
 
 let auth = Middleware.create begin fun env m ->
@@ -96,7 +96,7 @@ let auth = Middleware.create begin fun env m ->
       let redir = M.login_path in
       if uri = redir then Middleware.call env m else
         let redir = Printf.sprintf "%s?redir=%s" redir uri |> Uri.of_string in
-        Server.respond_redirect redir ()
+        CoSrv.respond_redirect redir ()
   end
 
 end

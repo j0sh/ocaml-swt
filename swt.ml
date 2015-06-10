@@ -1,4 +1,4 @@
-module Server = Cohttp_lwt_unix.Server
+module CoSrv = Cohttp_lwt_unix.Server
 
 module Env = struct
 
@@ -19,7 +19,7 @@ module Env = struct
 
 end
 
-type resp = (Server.Response.t * Cohttp_lwt_body.t) Lwt.t
+type resp = (CoSrv.Response.t * Cohttp_lwt_body.t) Lwt.t
 
 module Middleware = struct
   type t = MW of (Env.t -> t -> resp) list
@@ -28,7 +28,7 @@ module Middleware = struct
   let add handler (MW mw) = return (handler :: mw)
   let create handler = add handler empty
   let call env = function
-    | MW [] -> Server.respond_not_found ()
+    | MW [] -> CoSrv.respond_not_found ()
     | MW (h::t) -> h env (return t)
   let prepare (MW mw) = return (List.rev mw)
   let chain (MW a) (MW b) = return (b @ a)
@@ -95,16 +95,16 @@ let dispatcher = Middleware.create begin fun env m ->
     | _ -> begin try
           (* todo: branch to middleware that properly handles files, dirs, &c *)
           let uri = Cohttp.Request.uri req in
-          let fname = Server.resolve_local_file ~docroot:"static" ~uri in
-          Server.respond_file ~fname ()
-        with _ -> Server.respond_not_found ()
+          let fname = CoSrv.resolve_local_file ~docroot:"static" ~uri in
+          CoSrv.respond_file ~fname ()
+        with _ -> CoSrv.respond_not_found ()
       end
   end
 
 let exn_handler = Middleware.create begin fun env m ->
     let res = try Middleware.call env m with exn ->
       let body = Printexc.to_string exn in
-      Server.respond_error ~body () in
+      CoSrv.respond_error ~body () in
     flush stdout;
     res
   end
@@ -115,9 +115,9 @@ let make_server port middleware =
     let env = Env.make conninfo req body in
     Middleware.call env middleware in
   let conn_closed (ch, conn) = () in
-  let config = Server.make ~callback ~conn_closed () in
+  let config = CoSrv.make ~callback ~conn_closed () in
   let mode = `TCP (`Port port) in
-  Server.create ~mode config
+  CoSrv.create ~mode config
 
 let run ?(port = 8080) ?(middleware = Middleware.empty) () =
   let (@@) = Middleware.chain in

@@ -1,21 +1,21 @@
-module Server = Cohttp_lwt_unix.Server
+module CoSrv = Cohttp_lwt_unix.Server
 
 module Env : sig
     type t = {
-        cxnid: Server.conn;
+        cxnid: CoSrv.conn;
         mutable request: Cohttp.Request.t;
         body: Cohttp_lwt_body.t;
         mutable params: (string * string) list;
     } with fields
 
-    val make : ?params:(string * string) list -> Server.conn ->
+    val make : ?params:(string * string) list -> CoSrv.conn ->
         Cohttp.Request.t -> Cohttp_lwt_body.t -> t
 
     val param : t -> string -> string
 
 end
 
-type resp = (Server.Response.t * Cohttp_lwt_body.t) Lwt.t
+type resp = (CoSrv.Response.t * Cohttp_lwt_body.t) Lwt.t
 
 module Middleware : sig
     type t
