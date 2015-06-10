@@ -7,16 +7,14 @@ let _ = get "/hello/:name" begin fun env ->
     Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body ()
 end
 
-module A = struct
-    let secret = "el gato bebe leche"
-    let secure = false
-    let login_path = "/login"
-    let authorized params =
-        let username = Auth.search_kvs "username" params in
-        let pass = Auth.search_kvs "password" params in
-        username = "la llave" && pass = "open sesame"
-    let server = (module DefaultServer : Server_intf)
-end
+let authorized params =
+  let username = Auth.search_kvs "username" params in
+  let pass = Auth.search_kvs "password" params in
+  username = "la llave" && pass = "open sesame"
+
+let auth = Auth.default_impl ~secret:"el gato bebe leche" ~authorized ()
+
+module A = (val auth : Auth.Auth_intf)
 
 let login_body path = "
 <html>

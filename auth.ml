@@ -15,6 +15,22 @@ let search_kvs key params =
     let (_, v) = List.find (fun (k, _) -> key = k) params in v
   with Not_found -> raise Auth_error
 
+let gen_secret () =
+  Random.self_init();
+  String.init 25 (fun _ -> Char.chr ((Random.int 93) + 33)) (* ascii range *)
+
+let default_impl ?(secure = false) ?(login_path = "/login")
+  ?(server = (module DefaultServer : Server_intf)) ?(secret = gen_secret ())
+  ~authorized () =
+  let impl : (module Auth_intf) = (module struct
+    let secret = secret
+    let secure = secure
+    let login_path = login_path
+    let authorized = authorized
+    let server = server
+  end) in
+  impl
+
 module Make (M : Auth_intf)  = struct
 
   module HTTP = (val M.server : Server_intf)
