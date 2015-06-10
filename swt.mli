@@ -49,3 +49,6 @@ include Server_intf
 val run : ?port:int -> ?middleware:Middleware.t -> unit -> unit Lwt.t
 
 end
+
+module DefaultIntf   : Swt_intf
+module DefaultServer : module type of MakeServer(DefaultIntf)

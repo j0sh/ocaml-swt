@@ -1,7 +1,5 @@
-module SwtServer = Swt.MakeServer(struct end)
-
 open Swt
-open SwtServer
+open DefaultServer
 
 let _ = get "/hello/:name" begin fun env ->
     let name = Env.param env "name" in
@@ -17,7 +15,7 @@ module A = struct
         let username = Auth.search_kvs "username" params in
         let pass = Auth.search_kvs "password" params in
         username = "la llave" && pass = "open sesame"
-    let server = (module SwtServer : Server_intf)
+    let server = (module DefaultServer : Server_intf)
 end
 
 let login_body path = "

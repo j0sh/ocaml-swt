@@ -125,3 +125,6 @@ let run ?(port = 8080) ?(middleware = Middleware.empty) () =
   make_server port middleware
 
 end
+
+module DefaultIntf : Swt_intf = struct end
+module DefaultServer = MakeServer(DefaultIntf)
