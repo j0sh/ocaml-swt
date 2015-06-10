@@ -34,6 +34,25 @@ module Middleware = struct
   let chain (MW a) (MW b) = return (b @ a)
 end
 
+module type Swt_intf = sig
+end
+
+module type Server_intf = sig
+
+val get : string -> (Env.t -> resp) -> unit
+val post: string -> (Env.t -> resp) -> unit
+val head: string -> (Env.t -> resp) -> unit
+val put : string -> (Env.t -> resp) -> unit
+val delete: string -> (Env.t -> resp) -> unit
+val patch: string -> (Env.t -> resp) -> unit
+val put: string -> (Env.t -> resp) -> unit
+val options: string -> (Env.t -> resp) -> unit
+val other: string -> (Env.t -> resp) -> unit
+
+end
+
+module MakeServer(M:Swt_intf) = struct
+
 let routes = Array.init 10 (fun _ -> Route_tree.new_node "")
 
 let int_of_meth = function
@@ -104,3 +123,5 @@ let run ?(port = 8080) ?(middleware = Middleware.empty) () =
   let (@@) = Middleware.chain in
   let middleware = exn_handler @@ middleware @@ dispatcher in
   make_server port middleware
+
+end

@@ -3,6 +3,7 @@ module type Auth_int = sig
     val secure : bool
     val login_path : string
     val authorized : (string * string) list -> bool
+    val server : (module Swt.Server_intf)
 end
 
 module Make (M : Auth_int)  : sig

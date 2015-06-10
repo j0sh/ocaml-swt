@@ -5,6 +5,7 @@ module type Auth_int = sig
   val secure : bool
   val login_path : string
   val authorized : (string * string) list -> bool
+  val server : (module Server_intf)
 end
 
 exception Auth_error
@@ -15,6 +16,8 @@ let search_kvs key params =
   with Not_found -> raise Auth_error
 
 module Make (M : Auth_int)  = struct
+
+  module HTTP = (val M.server : Server_intf)
 
   let split_kvs s =
     let kvs = Str.split (Str.regexp "&") s in
@@ -36,7 +39,7 @@ module Make (M : Auth_int)  = struct
     let hex = transform_string (Hexa.encode()) in
     hash_string (MAC.hmac_sha1 M.secret) t |> hex
 
-  let _ = post M.login_path begin fun env ->
+  let _ = HTTP.post M.login_path begin fun env ->
       let req = Env.request env in
       let uri = Cohttp.Request.uri req in
       lwt body = Env.body env |> Cohttp_lwt_body.to_string in
@@ -62,7 +65,7 @@ module Make (M : Auth_int)  = struct
     Server.respond_redirect (Uri.of_string path) ()
 end
 
-let _ = post "/logout" begin fun env ->
+let _ = HTTP.post "/logout" begin fun env ->
     let cookie = Cohttp.Cookie.Set_cookie_hdr.make
         ~expiration:(`Max_age 1L)
         ~secure:M.secure ~http_only:true ("a", "unset") in
