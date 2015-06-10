@@ -1,6 +1,6 @@
 open Swt
 
-module type Auth_int = sig
+module type Auth_intf = sig
   val secret : string
   val secure : bool
   val login_path : string
@@ -15,7 +15,7 @@ let search_kvs key params =
     let (_, v) = List.find (fun (k, _) -> key = k) params in v
   with Not_found -> raise Auth_error
 
-module Make (M : Auth_int)  = struct
+module Make (M : Auth_intf)  = struct
 
   module HTTP = (val M.server : Server_intf)
 
