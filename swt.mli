@@ -15,7 +15,7 @@ module Env : sig
 
 end
 
-type resp = (CoSrv.Response.t * Cohttp_lwt_body.t) Lwt.t
+type resp = (Cohttp_lwt_unix.Response.t * Cohttp_lwt_body.t) Lwt.t
 
 module Middleware : sig
     type t

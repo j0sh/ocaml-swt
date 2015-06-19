@@ -19,7 +19,7 @@ module Env = struct
 
 end
 
-type resp = (CoSrv.Response.t * Cohttp_lwt_body.t) Lwt.t
+type resp = (Cohttp_lwt_unix.Response.t * Cohttp_lwt_body.t) Lwt.t
 
 module Middleware = struct
   type t = MW of (Env.t -> t -> resp) list
