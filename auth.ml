@@ -111,22 +111,26 @@ let _ = HTTP.post M.logout_path begin fun env ->
     CoSrv.respond_redirect ~headers ~uri:(Uri.of_string "/login") ()
   end
 
+let valid req = try
+  let cookies = Cohttp.(Cookie.Cookie_hdr.extract req.Request.headers) in
+  let token = search_kvs "a" cookies in
+  let kvs  = split_kvs token in
+  let tok = search_kvs "t" kvs in
+  let sgn = search_kvs "s" kvs in
+  let ext = try search_kvs "e" kvs with Auth_error -> "" in
+  let mac = gen_mac (tok ^ ext) in
+  mac = sgn
+with Auth_error -> false
+
 let auth = Middleware.create begin fun env m ->
     let open Cohttp in
     let req = Env.request env in
     let hdr = Header.remove req.Request.headers "swt-auth" in
-    let cookies = Cookie.Cookie_hdr.extract hdr in
     let req_with_hdr h = Request.(make ~headers:h ~meth:req.meth
       ~version:req.version ~encoding:req.encoding req.uri) in
     env.Env.request <- req_with_hdr hdr;
     try
-      let token = search_kvs "a" cookies in
-      let kvs = split_kvs token in
-      let tok = search_kvs "t" kvs in
-      let sgn = search_kvs "s" kvs in
-      let ext = try search_kvs "e" kvs with Auth_error -> "" in
-      let mac = gen_mac (tok ^ ext) in
-      if mac <> sgn then raise Auth_error else
+      if not (valid req) then raise Auth_error else
         env.Env.request <- Header.add hdr "swt-auth" "ok" |> req_with_hdr;
         Middleware.call env m
     with Auth_error ->

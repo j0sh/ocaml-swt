@@ -12,6 +12,11 @@ module Make (M : Auth_intf)  : sig
 
     val auth : Swt.Middleware.t
 
+  (* Utility function to check validity of a request without actually having
+  * to call into middleware. Useful if the request needs to be validated out of
+  * band for whatever reason. *)
+  val valid: Cohttp.Request.t -> bool
+
 end
 
 (* NOTE this function is not pure; if [secret] is left as default, the state
