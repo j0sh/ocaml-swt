@@ -4,6 +4,7 @@ module type Auth_intf = sig
   val secret : string
   val secure : bool
   val login_path : string
+  val logout_path : string
   val authorized : (string * string) list -> bool
   val extras : ((string * string) list -> string) option
   val server : (module Server_intf)
@@ -21,11 +22,12 @@ let gen_secret () =
 
 let default_impl ?(secure = false) ?(login_path = "/login")
   ?(server = (module DefaultServer : Server_intf)) ?(secret = gen_secret ())
-  ?extras ~authorized () =
+  ?(logout_path = "/logout") ?extras ~authorized () =
   let impl : (module Auth_intf) = (module struct
     let secret = secret
     let secure = secure
     let login_path = login_path
+    let logout_path = logout_path
     let authorized = authorized
     let extras = extras
     let server = server
@@ -92,7 +94,7 @@ module Make (M : Auth_intf)  = struct
     CoSrv.respond_redirect (Uri.of_string path) ()
 end
 
-let _ = HTTP.post "/logout" begin fun env ->
+let _ = HTTP.post M.logout_path begin fun env ->
     let cookie = Cohttp.Cookie.Set_cookie_hdr.make
         ~expiration:(`Max_age 1L)
         ~secure:M.secure ~http_only:true ("a", "unset") in
