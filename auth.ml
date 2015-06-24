@@ -18,7 +18,9 @@ with Not_found -> raise Auth_error
 
 let gen_secret () =
   Random.self_init();
-  String.init 25 (fun _ -> Char.chr ((Random.int 93) + 33)) (* ascii range *)
+  let an = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" in
+  let len = String.length an in
+  String.init 25 (fun _ -> an.[Random.int len])
 
 let default_impl ?(secure = false) ?(login_path = "/login")
   ?(server = (module DefaultServer : Server_intf)) ?(secret = gen_secret ())
@@ -51,16 +53,6 @@ module Make (M : Auth_intf)  = struct
 
   module HTTP = (val M.server : Server_intf)
 
-  let gen_passwd =
-    let alphanum = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789" in
-    let len = String.length alphanum in
-    function n ->
-      let str = Bytes.create n in
-      for i=0 to pred n do
-        Bytes.set str i alphanum.[Random.int len]
-      done;
-      (str) |> Bytes.to_string
-
   let gen_mac t =
     let open Cryptokit in
     let hex = transform_string (Hexa.encode()) in
@@ -87,7 +79,7 @@ module Make (M : Auth_intf)  = struct
     if not (M.authorized params) then
       raise Auth_error
     else begin
-      let t = gen_passwd 32 in
+      let t = gen_secret () in
       let e = match M.extras with None -> "" | Some f -> f params in
       let qe = match e with "" -> "" | qe -> "&e=" ^ qe in
       let s = gen_mac (t ^ e) in
