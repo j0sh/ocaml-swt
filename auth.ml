@@ -67,14 +67,22 @@ module Make (M : Auth_intf)  = struct
     hash_string (MAC.hmac_sha1 M.secret) t |> hex
 
   let _ = HTTP.post M.login_path begin fun env ->
+    let open Cohttp in
       let req = Env.request env in
-      let uri = Cohttp.Request.uri req in
+    let uri = Request.uri req in
       lwt body = Env.body env |> Cohttp_lwt_body.to_string in
   let params = Uri.query_of_encoded body in
   let params = List.map (fun (a, b) -> (a, (List.hd b))) params in
-  let redir = match Uri.get_query_param uri "redir" with
-    | None -> "/"
-    | Some s -> s in
+    let r1 = Uri.get_query_param uri "redir" in
+    let r2 = Header.get req.Request.headers "Referer" in
+    let redir = match r1, r2 with
+    | Some r, _ -> r
+    | None, None -> "/"
+    | None, Some r -> begin
+      match Uri.get_query_param (Uri.of_string r) "redir" with
+      | None -> "/"
+      | Some s -> s
+    end in
   try
     if not (M.authorized params) then
       raise Auth_error
