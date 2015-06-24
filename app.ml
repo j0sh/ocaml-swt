@@ -16,12 +16,12 @@ let auth = Auth.default_impl ~secret:"el gato bebe leche" ~authorized ()
 
 module A = (val auth : Auth.Auth_intf)
 
-let login_body path = "
+let login_body = "
 <html>
   <body>
     <div>
         <p>Log In, Please</p>
-        <form method='post' action='"^path^"' />
+        <form method='post' action='" ^ A.login_path ^ "'>
           <p>Username <input name='username' /></p>
           <p>Password <input name='password' type='password' /></p>
           <input type='submit' />
@@ -31,13 +31,7 @@ let login_body path = "
 </html>"
 
 let _ = get A.login_path begin fun env ->
-    let req = Env.request env in
-    let uri = Cohttp.Request.uri req in
-    let path = "/login" ^ match Uri.get_query_param uri "redir" with
-        | None -> ""
-        | Some r -> "?redir="^r in
-    let body = login_body path in
-    Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body ()
+  Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body:login_body ()
 end
 
 module M = Auth.Make(A)
