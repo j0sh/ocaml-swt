@@ -23,8 +23,10 @@ let gen_secret () =
   String.init 25 (fun _ -> an.[Random.int len])
 
 let default_impl ?(secure = false) ?(login_path = "/login")
-  ?(server = (module DefaultServer : Server_intf)) ?(secret = gen_secret ())
-  ?(logout_path = "/logout") ?extras ~authorized () =
+  ?(server = (module DefaultServer : Server_intf)) ?secret
+  ?(logout_path = "/logout") ?extras ?seed ~authorized () =
+  (match seed with Some s -> Random.full_init s | None -> Random.self_init ());
+  let secret = match secret with Some s -> s | None -> gen_secret () in
   let impl : (module Auth_intf) = (module struct
     let secret = secret
     let secure = secure

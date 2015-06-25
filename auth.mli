@@ -24,7 +24,8 @@ end
 val default_impl : ?secure:bool -> ?login_path:string ->
   ?server:(module Swt.Server_intf) -> ?secret:string ->
   ?logout_path:string -> ?extras:((string * string) list -> string) ->
-  authorized:((string * string) list -> bool) -> unit -> (module Auth_intf)
+  ?seed:int array -> authorized:((string * string) list -> bool) -> unit ->
+  (module Auth_intf)
 
 val search_kvs : string -> (string * string) list -> string
 
