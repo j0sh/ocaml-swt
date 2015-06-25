@@ -10,6 +10,11 @@ module type Auth_intf = sig
   val server : (module Server_intf)
 end
 
+module type Auth = sig
+  val auth : Swt.Middleware.t
+  val valid : Cohttp.Request.t -> bool
+end
+
 exception Auth_error
 
 let search_kvs key params = try

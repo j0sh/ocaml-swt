@@ -8,16 +8,16 @@ module type Auth_intf = sig
     val server : (module Swt.Server_intf)
 end
 
-module Make (M : Auth_intf)  : sig
-
-    val auth : Swt.Middleware.t
+module type Auth = sig
+  val auth : Swt.Middleware.t
 
   (* Utility function to check validity of a request without actually having
   * to call into middleware. Useful if the request needs to be validated out of
   * band for whatever reason. *)
-  val valid: Cohttp.Request.t -> bool
-
+  val valid : Cohttp.Request.t -> bool
 end
+
+module Make (M : Auth_intf)  : Auth
 
 (* NOTE this function is not pure; if [secret] is left as default, the state
  *      of Random is reset by calling Random.self_init () *)
