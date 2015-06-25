@@ -82,7 +82,8 @@ let connect = register `CONNECT
 let trace = register `TRACE
 let other = register (`Other "")
 
-let dispatcher = Middleware.create begin fun env m ->
+let dispatcher docroot =
+  Middleware.create begin fun env m ->
     let req = Env.request env in
     let meth = Cohttp.Request.meth req in
     let table = routes.(int_of_meth meth) in
@@ -95,7 +96,7 @@ let dispatcher = Middleware.create begin fun env m ->
     | _ -> begin try
           (* todo: branch to middleware that properly handles files, dirs, &c *)
           let uri = Cohttp.Request.uri req in
-          let fname = CoSrv.resolve_local_file ~docroot:"static" ~uri in
+          let fname = CoSrv.resolve_local_file ~docroot ~uri in
           CoSrv.respond_file ~fname ()
         with _ -> CoSrv.respond_not_found ()
       end
@@ -119,9 +120,10 @@ let make_server port middleware =
   let mode = `TCP (`Port port) in
   CoSrv.create ~mode config
 
-let run ?(port = 8080) ?(middleware = Middleware.empty) () =
+let run ?(port = 8080) ?(middleware = Middleware.empty) ?(docroot = "static")
+  () =
   let (@@) = Middleware.chain in
-  let middleware = exn_handler @@ middleware @@ dispatcher in
+  let middleware = exn_handler @@ middleware @@ dispatcher docroot in
   make_server port middleware
 
 end
