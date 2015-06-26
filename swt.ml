@@ -34,9 +34,6 @@ module Middleware = struct
   let chain (MW a) (MW b) = return (b @ a)
 end
 
-module type Swt_intf = sig
-end
-
 module type Server_intf = sig
 
 val get : string -> (Env.t -> resp) -> unit
@@ -51,7 +48,7 @@ val other: string -> (Env.t -> resp) -> unit
 
 end
 
-module MakeServer(M:Swt_intf) = struct
+module MakeServer () = struct
 
 let routes = Array.init 10 (fun _ -> Route_tree.new_node "")
 
@@ -128,5 +125,4 @@ let run ?(port = 8080) ?(middleware = Middleware.empty) ?(docroot = "static")
 
 end
 
-module DefaultIntf : Swt_intf = struct end
-module DefaultServer = MakeServer(DefaultIntf)
+module DefaultServer = MakeServer ()

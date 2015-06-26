@@ -25,9 +25,6 @@ module Middleware : sig
     val chain : t -> t -> t
 end
 
-module type Swt_intf = sig
-end
-
 module type Server_intf = sig
 
 val get : string -> (Env.t -> resp) -> unit
@@ -42,7 +39,7 @@ val other: string -> (Env.t -> resp) -> unit
 
 end
 
-module MakeServer(M:Swt_intf) : sig
+module MakeServer () : sig
 
 include Server_intf
 
@@ -51,5 +48,4 @@ val run : ?port:int -> ?middleware:Middleware.t -> ?docroot:string -> unit ->
 
 end
 
-module DefaultIntf   : Swt_intf
-module DefaultServer : module type of MakeServer(DefaultIntf)
+module DefaultServer : module type of MakeServer()
