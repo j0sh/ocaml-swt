@@ -13,6 +13,7 @@ end
 module type Auth = sig
   val auth : Swt.Middleware.t
   val valid : Cohttp.Request.t -> bool
+  val authorize : (string * string) list -> Cohttp.Header.t
 end
 
 exception Auth_error
@@ -65,6 +66,16 @@ module Make (M : Auth_intf)  = struct
     let hex = transform_string (Hexa.encode()) in
     hash_string (MAC.hmac_sha1 M.secret) t |> hex
 
+  let authorize params =
+    let t = gen_secret () in
+    let e = match M.extras with None -> "" | Some f -> f params in
+    let qe = match e with "" -> "" | qe -> "&e=" ^ qe in
+    let s = gen_mac (t ^ e) in
+    let v = Printf.sprintf "t=%s&s=%s%s" t s qe in
+    let cookie = Cohttp.Cookie.Set_cookie_hdr.make ~expiration:`Session ~secure:M.secure ~http_only:true ("a", v) in
+    let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
+    Cohttp.Header.init_with k v
+
   let _ = HTTP.post M.login_path begin fun env ->
     let open Cohttp in
       let req = Env.request env in
@@ -86,14 +97,7 @@ module Make (M : Auth_intf)  = struct
     if not (M.authorized params) then
       raise Auth_error
     else begin
-      let t = gen_secret () in
-      let e = match M.extras with None -> "" | Some f -> f params in
-      let qe = match e with "" -> "" | qe -> "&e=" ^ qe in
-      let s = gen_mac (t ^ e) in
-      let v = Printf.sprintf "t=%s&s=%s%s" t s qe in
-      let cookie = Cohttp.Cookie.Set_cookie_hdr.make ~expiration:`Session ~secure:M.secure ~http_only:true ("a", v) in
-      let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
-      let headers = Cohttp.Header.init_with k v in
+      let headers = authorize params in
       CoSrv.respond_redirect ~headers ~uri:(Uri.of_string redir) ()
     end
   with Auth_error ->

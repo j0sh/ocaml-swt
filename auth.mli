@@ -15,6 +15,10 @@ module type Auth = sig
   * to call into middleware. Useful if the request needs to be validated out of
   * band for whatever reason. *)
   val valid : Cohttp.Request.t -> bool
+
+  (* Generates a cookie header. Useful to force a login out of band. *)
+  (* Takes a list of (key, value) parameters to be checked against.  *)
+  val authorize : (string * string) list -> Cohttp.Header.t
 end
 
 module Make (M : Auth_intf)  : Auth
