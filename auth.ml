@@ -5,15 +5,15 @@ module type Auth_intf = sig
   val secure : bool
   val login_path : string
   val logout_path : string
-  val authorized : (string * string) list -> bool
-  val extras : ((string * string) list -> string) option
+  val authorized : (string * string) list -> bool Lwt.t
+  val extras : ((string * string) list -> string Lwt.t) option
   val server : (module Server_intf)
 end
 
 module type Auth = sig
   val auth : Swt.Middleware.t
   val valid : Cohttp.Request.t -> bool
-  val authorize : (string * string) list -> Cohttp.Header.t
+  val authorize : (string * string) list -> Cohttp.Header.t Lwt.t
 end
 
 exception Auth_error
@@ -61,6 +61,8 @@ module Make (M : Auth_intf)  = struct
 
   module HTTP = (val M.server : Server_intf)
 
+  let (>>=) = Lwt.bind
+
   let gen_mac t =
     let open Cryptokit in
     let hex = transform_string (Hexa.encode()) in
@@ -68,13 +70,13 @@ module Make (M : Auth_intf)  = struct
 
   let authorize params =
     let t = gen_secret () in
-    let e = match M.extras with None -> "" | Some f -> f params in
+    (match M.extras with None -> Lwt.return "" | Some f -> f params) >>= fun e ->
     let qe = match e with "" -> "" | qe -> "&e=" ^ qe in
     let s = gen_mac (t ^ e) in
     let v = Printf.sprintf "t=%s&s=%s%s" t s qe in
     let cookie = Cohttp.Cookie.Set_cookie_hdr.make ~expiration:`Session ~secure:M.secure ~http_only:true ("a", v) in
     let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
-    Cohttp.Header.init_with k v
+    Lwt.return (Cohttp.Header.init_with k v)
 
   let _ = HTTP.post M.login_path begin fun env ->
     let open Cohttp in
@@ -93,11 +95,12 @@ module Make (M : Auth_intf)  = struct
       | None -> "/"
       | Some s -> s
     end in
-  try
-    if not (M.authorized params) then
-      raise Auth_error
+  try_lwt
+    M.authorized params >>= fun auth ->
+    if not auth then
+      Lwt.fail Auth_error
     else begin
-      let headers = authorize params in
+      authorize params >>= fun headers ->
       CoSrv.respond_redirect ~headers ~uri:(Uri.of_string redir) ()
     end
   with Auth_error ->
