@@ -10,7 +10,9 @@ end
 let authorized params =
   let username = Auth.search_kvs "username" params in
   let pass = Auth.search_kvs "password" params in
-  Lwt.return (username = "la llave" && pass = "open sesame")
+  let res = if username = "la llave" && pass = "open sesame"
+    then Some "session data here" else None in
+  Lwt.return res
 
 let auth = Auth.default_impl ~secret:"el gato bebe leche" ~authorized ()
 

@@ -5,15 +5,14 @@ module type Auth_intf = sig
   val secure : bool
   val login_path : string
   val logout_path : string
-  val authorized : (string * string) list -> bool Lwt.t
-  val extras : ((string * string) list -> string Lwt.t) option
+  val authorized : (string * string) list -> string option Lwt.t
   val server : (module Server_intf)
 end
 
 module type Auth = sig
   val auth : Swt.Middleware.t
   val valid : Cohttp.Request.t -> bool
-  val authorize : (string * string) list -> Cohttp.Header.t Lwt.t
+  val authorize : string -> Cohttp.Header.t
 end
 
 exception Auth_error
@@ -30,7 +29,7 @@ let gen_secret () =
 
 let default_impl ?(secure = false) ?(login_path = "/login")
   ?(server = (module DefaultServer : Server_intf)) ?secret
-  ?(logout_path = "/logout") ?extras ?seed ~authorized () =
+  ?(logout_path = "/logout") ?seed ~authorized () =
   (match seed with Some s -> Random.full_init s | None -> Random.self_init ());
   let secret = match secret with Some s -> s | None -> gen_secret () in
   let impl : (module Auth_intf) = (module struct
@@ -39,7 +38,6 @@ let default_impl ?(secure = false) ?(login_path = "/login")
     let login_path = login_path
     let logout_path = logout_path
     let authorized = authorized
-    let extras = extras
     let server = server
   end) in
   impl
@@ -68,15 +66,14 @@ module Make (M : Auth_intf)  = struct
     let hex = transform_string (Hexa.encode()) in
     hash_string (MAC.hmac_sha1 M.secret) t |> hex
 
-  let authorize params =
+  let authorize e =
     let t = gen_secret () in
-    (match M.extras with None -> Lwt.return "" | Some f -> f params) >>= fun e ->
     let qe = match e with "" -> "" | qe -> "&e=" ^ qe in
     let s = gen_mac (t ^ e) in
     let v = Printf.sprintf "t=%s&s=%s%s" t s qe in
     let cookie = Cohttp.Cookie.Set_cookie_hdr.make ~expiration:`Session ~secure:M.secure ~http_only:true ("a", v) in
     let (k, v) = Cohttp.Cookie.Set_cookie_hdr.serialize cookie in
-    Lwt.return (Cohttp.Header.init_with k v)
+    Cohttp.Header.init_with k v
 
   let _ = HTTP.post M.login_path begin fun env ->
     let open Cohttp in
@@ -96,13 +93,11 @@ module Make (M : Auth_intf)  = struct
       | Some s -> s
     end in
   try_lwt
-    M.authorized params >>= fun auth ->
-    if not auth then
-      Lwt.fail Auth_error
-    else begin
-      authorize params >>= fun headers ->
+    M.authorized params >>= begin function
+      | Some s -> Lwt.return (authorize s)
+      | None -> Lwt.fail Auth_error
+    end >>= fun headers ->
       CoSrv.respond_redirect ~headers ~uri:(Uri.of_string redir) ()
-    end
   with Auth_error ->
     let path = M.login_path ^ "?redir=" ^ redir in
     CoSrv.respond_redirect (Uri.of_string path) ()
