@@ -6,6 +6,7 @@ module type Auth_intf = sig
   val login_path : string
   val logout_path : string
   val authorized : (string * string) list -> string option Lwt.t
+  val redir : string -> string Lwt.t
   val server : (module Server_intf)
 end
 
@@ -29,7 +30,8 @@ let gen_secret () =
 
 let default_impl ?(secure = false) ?(login_path = "/login")
   ?(server = (module DefaultServer : Server_intf)) ?secret
-  ?(logout_path = "/logout") ?seed ~authorized () =
+  ?(logout_path = "/logout") ?seed ?(redir = fun s -> Lwt.return s)
+  ~authorized () =
   (match seed with Some s -> Random.full_init s | None -> Random.self_init ());
   let secret = match secret with Some s -> s | None -> gen_secret () in
   let impl : (module Auth_intf) = (module struct
@@ -38,6 +40,7 @@ let default_impl ?(secure = false) ?(login_path = "/login")
     let login_path = login_path
     let logout_path = logout_path
     let authorized = authorized
+    let redir = redir
     let server = server
   end) in
   impl
@@ -92,6 +95,7 @@ module Make (M : Auth_intf)  = struct
       | None -> "/"
       | Some s -> s
     end in
+  M.redir redir >>= fun redir ->
   try_lwt
     M.authorized params >>= begin function
       | Some s -> Lwt.return (authorize s)

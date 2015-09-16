@@ -4,6 +4,7 @@ module type Auth_intf = sig
     val login_path : string
     val logout_path : string
     val authorized : (string * string) list -> string option Lwt.t
+    val redir : string -> string Lwt.t
     val server : (module Swt.Server_intf)
 end
 
@@ -27,6 +28,7 @@ module Make (M : Auth_intf)  : Auth
 val default_impl : ?secure:bool -> ?login_path:string ->
   ?server:(module Swt.Server_intf) -> ?secret:string ->
   ?logout_path:string -> ?seed:int array ->
+  ?redir:(string -> string Lwt.t) ->
   authorized:((string * string) list -> string option Lwt.t) -> unit ->
   (module Auth_intf)
 
