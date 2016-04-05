@@ -17,6 +17,6 @@ depends: [
   "cohttp" {>="0.18.0"}
   "lwt"
   "uri"
-  "fieldslib"
+  "fieldslib" {<"113.0.0"}
   "cryptokit"
 ]

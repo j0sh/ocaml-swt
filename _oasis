@@ -11,4 +11,4 @@ Library swt
   BuildTools:      ocamlbuild
   Modules:         Swt, Auth
   InternalModules: Route_tree
-  BuildDepends: str,cohttp (>= 0.18.0), cohttp.lwt,lwt,lwt.syntax,uri,fieldslib,fieldslib.syntax,cryptokit
+  BuildDepends: str,cohttp (>= 0.18.0), cohttp.lwt,lwt,lwt.syntax,uri,fieldslib (< 113.0.0),fieldslib.syntax,cryptokit
