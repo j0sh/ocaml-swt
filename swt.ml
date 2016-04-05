@@ -7,7 +7,7 @@ module Env = struct
     mutable request: Cohttp.Request.t;
     body: Cohttp_lwt_body.t;
     mutable params: (string * string) list;
-  } with fields
+  } [@@deriving fields]
 
   let make ?(params = []) cxnid request body =
     { cxnid; request; body; params; }

@@ -6,7 +6,7 @@ module Env : sig
         mutable request: Cohttp.Request.t;
         body: Cohttp_lwt_body.t;
         mutable params: (string * string) list;
-    } with fields
+    } [@@deriving fields]
 
     val make : ?params:(string * string) list -> CoSrv.conn ->
         Cohttp.Request.t -> Cohttp_lwt_body.t -> t

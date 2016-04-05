@@ -82,7 +82,7 @@ module Make (M : Auth_intf)  = struct
     let open Cohttp in
       let req = Env.request env in
     let uri = Request.uri req in
-      lwt body = Env.body env |> Cohttp_lwt_body.to_string in
+    let%lwt body = Env.body env |> Cohttp_lwt_body.to_string in
   let params = Uri.query_of_encoded body in
   let params = List.map (fun (a, b) -> (a, (List.hd b))) params in
     let r1 = Uri.get_query_param uri "redir" in
@@ -96,7 +96,7 @@ module Make (M : Auth_intf)  = struct
       | Some s -> s
     end in
   M.redir redir >>= fun redir ->
-  try_lwt
+  try%lwt
     M.authorized params >>= begin function
       | Some s -> Lwt.return (authorize s)
       | None -> Lwt.fail Auth_error
