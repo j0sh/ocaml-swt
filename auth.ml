@@ -132,7 +132,7 @@ let auth = Middleware.create begin fun env m ->
     let req = Env.request env in
     let hdr = Header.remove req.Request.headers "swt-auth" in
     let req_with_hdr h = Request.(make ~headers:h ~meth:req.meth
-      ~version:req.version ~encoding:req.encoding req.uri) in
+      ~version:req.version ~encoding:req.encoding (Request.uri req)) in
     env.Env.request <- req_with_hdr hdr;
     try
       if not (valid req) then raise Auth_error else

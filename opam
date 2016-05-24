@@ -14,7 +14,7 @@ install: [make "install"]
 remove: ["ocamlfind" "remove" "swt"]
 depends: [
   "ocamlfind" {build}
-  "cohttp" {>="0.20.1"}
+  "cohttp" {>="0.21.0"}
   "lwt"
   "uri"
   "fieldslib" {>="113.0.0"}
