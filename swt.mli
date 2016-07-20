@@ -43,8 +43,8 @@ module MakeServer () : sig
 
 include Server_intf
 
-val run : ?port:int -> ?middleware:Middleware.t -> ?docroot:string -> unit ->
-  unit Lwt.t
+val run : ?port:int -> ?middleware:Middleware.t -> ?docroot:string ->
+  ?tls:string * string -> unit -> unit Lwt.t
 
 end
 
