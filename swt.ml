@@ -107,7 +107,7 @@ let exn_handler = Middleware.create begin fun env m ->
     res
   end
 
-let make_server ?tls port middleware =
+let make_server ?tls ?stop port middleware =
   let middleware = Middleware.prepare middleware in
   let callback conninfo req body =
     let env = Env.make conninfo req body in
@@ -118,13 +118,13 @@ let make_server ?tls port middleware =
   | Some (cert, key) ->
     `TLS (`Crt_file_path cert, `Key_file_path key, `No_password, (`Port port))
   | None -> `TCP (`Port port) in
-  CoSrv.create ~mode config
+  CoSrv.create ~mode ?stop config
 
 let run ?(port = 8080) ?(middleware = Middleware.empty) ?(docroot = "static")
-  ?tls () =
+  ?tls ?stop () =
   let (@@) = Middleware.chain in
   let middleware = exn_handler @@ middleware @@ dispatcher docroot in
-  make_server ?tls port middleware
+  make_server ?tls ?stop port middleware
 
 end
 
