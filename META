@@ -1,9 +1,9 @@
 # OASIS_START
-# DO NOT EDIT (digest: b55a10b037f70bf60313e5abefe3dc72)
+# DO NOT EDIT (digest: daa106b60926cde3eb22f869bc27357d)
 version = "0.01"
 description = "Simple Web Toolkit for OCaml"
 requires =
-"str cohttp cohttp.lwt lwt lwt.ppx uri fieldslib ppx_fields_conv cryptokit"
+"str cohttp cohttp-lwt-unix lwt uri fieldslib ppx_fields_conv cryptokit"
 archive(byte) = "swt.cma"
 archive(byte, plugin) = "swt.cma"
 archive(native) = "swt.cmxa"
