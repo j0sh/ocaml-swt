@@ -4,18 +4,18 @@ module Env : sig
     type t = {
         cxnid: CoSrv.conn;
         mutable request: Cohttp.Request.t;
-        body: Cohttp_lwt_body.t;
+        body: Cohttp_lwt.Body.t;
         mutable params: (string * string) list;
     } [@@deriving fields]
 
     val make : ?params:(string * string) list -> CoSrv.conn ->
-        Cohttp.Request.t -> Cohttp_lwt_body.t -> t
+        Cohttp.Request.t -> Cohttp_lwt.Body.t -> t
 
     val param : t -> string -> string
 
 end
 
-type resp = (Cohttp_lwt_unix.Response.t * Cohttp_lwt_body.t) Lwt.t
+type resp = (Cohttp_lwt_unix.Response.t * Cohttp_lwt.Body.t) Lwt.t
 
 module Middleware : sig
     type t

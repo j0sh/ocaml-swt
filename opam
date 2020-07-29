@@ -19,8 +19,9 @@ remove: ["ocamlfind" "remove" "swt"]
 depends: [
   "ocamlfind" {build}
   "cohttp" {>="0.21.0"}
-  "lwt"
+  "cohttp-lwt-unix"
   "uri"
+  "ppx_deriving"
   "fieldslib" {>="113.0.0"}
   "cryptokit"
 ]

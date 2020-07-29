@@ -5,7 +5,7 @@ module Env = struct
   type t = {
     cxnid: Cohttp_lwt_unix.Server.conn;
     mutable request: Cohttp.Request.t;
-    body: Cohttp_lwt_body.t;
+    body: Cohttp_lwt.Body.t;
     mutable params: (string * string) list;
   } [@@deriving fields]
 
@@ -19,7 +19,7 @@ module Env = struct
 
 end
 
-type resp = (Cohttp_lwt_unix.Response.t * Cohttp_lwt_body.t) Lwt.t
+type resp = (Cohttp_lwt_unix.Response.t * Cohttp_lwt.Body.t) Lwt.t
 
 module Middleware = struct
   type t = MW of (Env.t -> t -> resp) list
