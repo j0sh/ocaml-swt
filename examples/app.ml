@@ -32,7 +32,7 @@ let login_body = "
   </body>
 </html>"
 
-let _ = get A.login_path begin fun env ->
+let _ = get A.login_path begin fun _env ->
   Cohttp_lwt_unix.Server.respond_string ~status:`OK ~body:login_body ()
 end
 

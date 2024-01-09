@@ -39,11 +39,12 @@ module type Server_intf = sig
 val get : string -> (Env.t -> resp) -> unit
 val post: string -> (Env.t -> resp) -> unit
 val head: string -> (Env.t -> resp) -> unit
-val put : string -> (Env.t -> resp) -> unit
 val delete: string -> (Env.t -> resp) -> unit
 val patch: string -> (Env.t -> resp) -> unit
 val put: string -> (Env.t -> resp) -> unit
 val options: string -> (Env.t -> resp) -> unit
+val connect: string -> (Env.t -> resp) -> unit
+val trace: string -> (Env.t -> resp) -> unit
 val other: string -> (Env.t -> resp) -> unit
 
 end
@@ -80,7 +81,7 @@ let trace = register `TRACE
 let other = register (`Other "")
 
 let dispatcher docroot =
-  Middleware.create begin fun env m ->
+  Middleware.create begin fun env _m ->
     let req = Env.request env in
     let meth = Cohttp.Request.meth req in
     let table = routes.(int_of_meth meth) in
@@ -112,7 +113,7 @@ let make_server ?tls ?stop port middleware =
   let callback conninfo req body =
     let env = Env.make conninfo req body in
     Middleware.call env middleware in
-  let conn_closed (ch, conn) = () in
+  let conn_closed (_ch, _conn) = () in
   let config = CoSrv.make ~callback ~conn_closed () in
   let mode = match tls with
   | Some (cert, key) ->

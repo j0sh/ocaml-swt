@@ -1,4 +1,6 @@
-open Swt
+module Middleware = Swt_in.Middleware
+module Env = Swt_in.Env
+module CoSrv = Cohttp_lwt_unix.Server
 
 module type Auth_intf = sig
   val secret : string
@@ -7,11 +9,11 @@ module type Auth_intf = sig
   val logout_path : string
   val authorized : (string * string) list -> string option Lwt.t
   val redir : string -> string Lwt.t
-  val server : (module Server_intf)
+  val server : (module Swt_in.Server_intf)
 end
 
 module type Auth = sig
-  val auth : Swt.Middleware.t
+  val auth : Middleware.t
   val valid : Cohttp.Request.t -> bool
   val authorize : string -> Cohttp.Header.t
 end
@@ -29,7 +31,7 @@ let gen_secret () =
   String.init 25 (fun _ -> an.[Random.int len])
 
 let default_impl ?(secure = false) ?(login_path = "/login")
-  ?(server = (module DefaultServer : Server_intf)) ?secret
+  ?(server = (module Swt_in.DefaultServer : Swt_in.Server_intf)) ?secret
   ?(logout_path = "/logout") ?seed ?(redir = fun s -> Lwt.return s)
   ~authorized () =
   (match seed with Some s -> Random.full_init s | None -> Random.self_init ());
@@ -60,7 +62,7 @@ with Auth_error -> None
 
 module Make (M : Auth_intf)  = struct
 
-  module HTTP = (val M.server : Server_intf)
+  module HTTP = (val M.server : Swt_in.Server_intf)
 
   let (>>=) = Lwt.bind
 
@@ -110,7 +112,7 @@ module Make (M : Auth_intf)  = struct
   )
 end
 
-let _ = HTTP.post M.logout_path begin fun env ->
+let _ = HTTP.post M.logout_path begin fun _env ->
     let cookie = Cohttp.Cookie.Set_cookie_hdr.make
         ~expiration:(`Max_age 1L)
         ~secure:M.secure ~http_only:true ("a", "unset") in

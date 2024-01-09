@@ -30,11 +30,12 @@ module type Server_intf = sig
 val get : string -> (Env.t -> resp) -> unit
 val post: string -> (Env.t -> resp) -> unit
 val head: string -> (Env.t -> resp) -> unit
-val put : string -> (Env.t -> resp) -> unit
 val delete: string -> (Env.t -> resp) -> unit
 val patch: string -> (Env.t -> resp) -> unit
 val put: string -> (Env.t -> resp) -> unit
 val options: string -> (Env.t -> resp) -> unit
+val connect: string -> (Env.t -> resp) -> unit
+val trace: string -> (Env.t -> resp) -> unit
 val other: string -> (Env.t -> resp) -> unit
 
 end

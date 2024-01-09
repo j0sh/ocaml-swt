@@ -52,7 +52,7 @@ let replace_branch branch tree =
   Node (v, q, branch::sans_a)
 
 let rec build tree parts value =
-  let Node (v, _, branches) = tree in
+  let Node (_v, _, branches) = tree in
   match parts with
     [] -> set_value value tree
   | h :: [] ->
