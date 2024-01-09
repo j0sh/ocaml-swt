@@ -1,0 +1,6 @@
+(library
+ (public_name swt)
+ (name swt)
+ (libraries str cohttp-lwt-unix cryptokit)
+ (preprocess (pps ppx_fields_conv))
+)
