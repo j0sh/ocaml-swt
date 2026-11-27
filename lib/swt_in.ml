@@ -94,7 +94,7 @@ let dispatcher docroot =
     | _ -> begin try
           (* todo: branch to middleware that properly handles files, dirs, &c *)
           let uri = Cohttp.Request.uri req in
-          let fname = CoSrv.resolve_local_file ~docroot ~uri in
+          let fname = Cohttp.Path.resolve_local_file ~docroot ~uri in
           CoSrv.respond_file ~fname ()
         with _ -> CoSrv.respond_not_found ()
       end
